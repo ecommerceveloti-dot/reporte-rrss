@@ -1,5 +1,5 @@
 {
- "generado": "2026-10-15 15:14",
+ "generado": "2026-10-15 16:00",
  "fuente": "Base_Datos_KPIs_Redes_Sociales.xlsx",
  "registros": [
   {
@@ -211,21 +211,6 @@
    "saves": 105,
    "watch_time_seconds": 88000,
    "interactions": 1251
-  },
-  {
-   "date": "2026-10-05",
-   "platform": "YouTube",
-   "content_type": "Short",
-   "followers": 8952,
-   "new_followers": 12,
-   "impressions": 3600,
-   "reach": 3100,
-   "likes": 170,
-   "comments": 14,
-   "shares": 15,
-   "saves": 22,
-   "watch_time_seconds": 21000,
-   "interactions": 221
   }
  ]
 }
