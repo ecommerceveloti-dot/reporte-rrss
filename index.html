@@ -49,6 +49,11 @@ details summary::after{content:"Mostrar";font-size:12.5px;font-weight:400;color:
 details[open] summary::after{content:"Ocultar"}
 details[open] summary{margin-bottom:10px}
 .err{background:var(--card);border:1px solid var(--down);border-radius:12px;padding:16px;color:var(--down);display:none}
+.btn{background:var(--acc);color:#fff;border:0;border-radius:8px;padding:9px 14px;font:inherit;font-size:14px;cursor:pointer;white-space:nowrap}
+.btn:hover{filter:brightness(1.1)}
+.aviso{display:none;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:8px;background:var(--card);border:1px solid var(--acc);border-radius:12px;padding:10px 16px;margin-bottom:16px;font-size:13.5px}
+.lnk{background:none;border:0;color:var(--acc);font:inherit;font-size:13.5px;cursor:pointer;padding:0}
+body.drag .wrap{outline:2px dashed var(--acc);outline-offset:-8px;border-radius:16px}
 footer{color:var(--muted);font-size:12px;margin-top:20px;text-align:center}
 @media (max-width:600px){.k .v{font-size:22px}select{min-width:0;width:100%}.ctrls>div{flex:1 1 100%}.seg{overflow-x:auto}}
 </style>
@@ -63,9 +68,11 @@ footer{color:var(--muted);font-size:12px;margin-top:20px;text-align:center}
   <div class="ctrls">
     <div><label for="periodo">Período</label><select id="periodo"></select></div>
     <div><label>Plataforma</label><div class="seg" id="plats"></div></div>
+    <div><label>&nbsp;</label><button class="btn" id="btnCargar" title="Ver el dashboard con tu propio Excel">Cargar Excel</button><input type="file" id="archivo" accept=".xlsx,.xls,.csv" hidden></div>
   </div>
 </header>
 
+<div class="aviso" id="aviso"><span id="avisoTxt"></span><button class="lnk" id="btnVolver">Volver a los datos publicados</button></div>
 <div class="err" id="err"></div>
 
 <section class="kpis" id="kpis"></section>
@@ -246,13 +253,118 @@ function botonesPlataforma() {
   $("plats").querySelectorAll("button").forEach(b => b.onclick = () => { plat = b.dataset.p; botonesPlataforma(); render(); });
 }
 
-fetch("data.json?v=" + Date.now()).then(r => { if (!r.ok) throw new Error("HTTP " + r.status); return r.json(); }).then(j => {
+// ---------- Carga de Excel en el navegador (misma lógica que actualizar_datos.py) ----------
+const COLUMNAS = {
+  date: ["fecha", "date"], platform: ["plataforma", "platform"],
+  content_type: ["formato / tipo", "formato", "tipo", "content_type"],
+  followers: ["seguidores totales", "followers"], new_followers: ["nuevos seguidores", "new_followers"],
+  impressions: ["impresiones / views", "impresiones", "views", "impressions"], reach: ["alcance unico", "alcance", "reach"],
+  likes: ["me gusta (likes)", "me gusta", "likes"], comments: ["comentarios", "comments"], shares: ["compartidos", "shares"],
+  saves: ["guardados", "saves"], watch_time_seconds: ["tiempo visto (seg)", "tiempo visto", "watch_time_seconds"],
+};
+const NUMERICOS = Object.keys(COLUMNAS).filter(k => !["date", "platform", "content_type"].includes(k));
+const PLAT_NORM = { instagram: "Instagram", tiktok: "TikTok", youtube: "YouTube" };
+const norm = t => String(t ?? "").normalize("NFKD").replace(/[̀-ͯ]/g, "").toLowerCase().replace(/\s+/g, " ").trim();
+const aNumero = v => {
+  if (v == null || v === "") return 0;
+  if (typeof v === "number") return Math.round(v);
+  const n = parseFloat(String(v).trim().replace(/\./g, "").replace(",", "."));  // formato es-CL: 12.500
+  return isNaN(n) ? 0 : Math.round(n);
+};
+const aFecha = v => {
+  if (typeof v === "number" && v > 20000 && v < 80000) return new Date(Math.round((v - 25569) * 864e5)).toISOString().slice(0, 10);  // serial Excel
+  if (v instanceof Date) return toIso(v);
+  const s = String(v ?? "").trim();
+  let m = s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/); if (m) return `${m[1]}-${m[2].padStart(2, "0")}-${m[3].padStart(2, "0")}`;
+  m = s.match(/^(\d{1,2})[-/](\d{1,2})[-/](\d{4})/); if (m) return `${m[3]}-${m[2].padStart(2, "0")}-${m[1].padStart(2, "0")}`;
+  return null;
+};
+
+function leerHoja(filas) {
+  for (let i = 0; i < Math.min(filas.length, 30); i++) {
+    const nombres = {};
+    (filas[i] || []).forEach((c, j) => { if (c != null && c !== "") nombres[norm(c)] = j; });
+    if (!("fecha" in nombres && "plataforma" in nombres)) continue;
+    const idx = {};
+    for (const [campo, alias] of Object.entries(COLUMNAS)) { const a = alias.find(x => x in nombres); if (a) idx[campo] = nombres[a]; }
+    if (!("impressions" in idx)) throw new Error("falta la columna Impresiones / Views");
+    const regs = [];
+    for (const f of filas.slice(i + 1)) {
+      const date = aFecha(f[idx.date]), platform = PLAT_NORM[norm(f[idx.platform])];
+      if (!date || !platform) continue;  // filas vacías, totales o plataformas desconocidas
+      const r = { date, platform, content_type: String(f[idx.content_type] ?? "").trim() || "Sin formato" };
+      NUMERICOS.forEach(k => r[k] = k in idx ? aNumero(f[idx[k]]) : 0);
+      r.interactions = r.likes + r.comments + r.shares + r.saves;
+      regs.push(r);
+    }
+    return regs;
+  }
+  return null;
+}
+
+function leerExcel(buffer) {
+  const wb = XLSX.read(buffer, { type: "array" });
+  const hojas = [...wb.SheetNames].sort((a, b) => (b === "Registro_Diario") - (a === "Registro_Diario"));
+  for (const h of hojas) {
+    const regs = leerHoja(XLSX.utils.sheet_to_json(wb.Sheets[h], { header: 1, raw: true, defval: null }));
+    if (regs) return regs.sort((a, b) => a.date.localeCompare(b.date) || a.platform.localeCompare(b.platform));
+  }
+  throw new Error("no encontré una hoja con las columnas Fecha y Plataforma");
+}
+
+let libXlsx = null;
+function cargarLibreria() {
+  return libXlsx || (libXlsx = new Promise((ok, mal) => {
+    const s = document.createElement("script");
+    s.src = "https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js";
+    s.onload = ok; s.onerror = () => { libXlsx = null; mal(new Error("no se pudo cargar el lector de Excel; revisa tu conexión")); };
+    document.head.appendChild(s);
+  }));
+}
+
+function mostrarError(msg) { $("err").style.display = msg ? "block" : "none"; $("err").textContent = msg || ""; }
+
+async function cargarArchivo(file) {
+  if (!file) return;
+  mostrarError("");
+  try {
+    await cargarLibreria();
+    const regs = leerExcel(await file.arrayBuffer()).filter(r => PLATS.includes(r.platform));
+    if (!regs.length) throw new Error("el archivo no tiene filas válidas (Fecha + Plataforma Instagram, TikTok o YouTube)");
+    const j = { generado: new Date().toLocaleString("es-CL", { dateStyle: "short", timeStyle: "short" }), fuente: file.name, registros: regs, local: true };
+    try { localStorage.setItem("rrss_excel", JSON.stringify(j)); } catch (e) {}
+    iniciar(j);
+  } catch (e) { mostrarError(`No se pudo leer "${file.name}": ${e.message}.`); }
+}
+
+$("btnCargar").onclick = () => $("archivo").click();
+$("archivo").onchange = e => { cargarArchivo(e.target.files[0]); e.target.value = ""; };
+$("btnVolver").onclick = () => { try { localStorage.removeItem("rrss_excel"); } catch (e) {} mostrarError(""); cargarPublicados(); };
+let arrastres = 0;
+addEventListener("dragenter", e => { e.preventDefault(); arrastres++; document.body.classList.add("drag"); });
+addEventListener("dragleave", () => { if (--arrastres <= 0) { arrastres = 0; document.body.classList.remove("drag"); } });
+addEventListener("dragover", e => e.preventDefault());
+addEventListener("drop", e => { e.preventDefault(); arrastres = 0; document.body.classList.remove("drag"); cargarArchivo(e.dataTransfer.files[0]); });
+
+// ---------- Inicio ----------
+function iniciar(j) {
   DATA = (j.registros || []).filter(r => PLATS.includes(r.platform));
-  if (!DATA.length) throw new Error("data.json no tiene registros");
-  $("foot").textContent = `Datos actualizados: ${j.generado} · fuente: ${j.fuente}`;
+  if (!DATA.length) throw new Error("no hay registros");
+  $("foot").textContent = `Datos ${j.local ? "cargados" : "actualizados"}: ${j.generado} · fuente: ${j.fuente}`;
+  $("aviso").style.display = j.local ? "flex" : "none";
+  $("avisoTxt").textContent = j.local ? `Estás viendo "${j.fuente}" (${DATA.length} registros), cargado solo en este navegador. Los demás siguen viendo los datos publicados.` : "";
   construirPeriodos(); botonesPlataforma(); render();
-  matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => { botonesPlataforma(); render(); });
-}).catch(e => { $("err").style.display = "block"; $("err").textContent = "No se pudieron cargar los datos (" + e.message + "). Si abriste el archivo con doble clic, usa el link publicado o un servidor local."; });
+}
+
+function cargarPublicados() {
+  fetch("data.json?v=" + Date.now()).then(r => { if (!r.ok) throw new Error("HTTP " + r.status); return r.json(); }).then(iniciar)
+    .catch(e => mostrarError("No se pudieron cargar los datos publicados (" + e.message + "). Puedes cargar un Excel con el botón de arriba."));
+}
+
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => { if (DATA.length) { botonesPlataforma(); render(); } });
+let guardadoExcel = null;
+try { guardadoExcel = JSON.parse(localStorage.getItem("rrss_excel") || "null"); } catch (e) {}
+if (guardadoExcel) { try { iniciar(guardadoExcel); } catch (e) { cargarPublicados(); } } else cargarPublicados();
 </script>
 </body>
 </html>
