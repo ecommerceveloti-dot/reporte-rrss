@@ -1,0 +1,4 @@
+# El Excel no se publica: solo data.json (lo que muestra el dashboard)
+*.xlsx
+~$*
+__pycache__/

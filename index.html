@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>KPIs Redes Sociales</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><rect x='3' y='12' width='4' height='9' rx='1' fill='%234f8ef7'/><rect x='10' y='7' width='4' height='14' rx='1' fill='%2338d9a9'/><rect x='17' y='3' width='4' height='18' rx='1' fill='%23c97ef7'/></svg>">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+:root{--bg:#f4f5f8;--card:#ffffff;--card2:#eef0f5;--line:#e1e3ea;--txt:#151821;--txt2:#545a6b;--muted:#8a90a0;--acc:#2f6fe0;--up:#118a5a;--down:#d0433b;--grid:#e6e8ee;
+--ig:#d4537e;--tt:#16a074;--yt:#e34948}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0f1117;--card:#181c27;--card2:#202535;--line:#2a3042;--txt:#eef0f5;--txt2:#aab0c0;--muted:#7a8194;--acc:#4f8ef7;--up:#38d9a9;--down:#f76f6f;--grid:#262b3a;--ig:#e87ba4;--tt:#38d9a9;--yt:#f76f6f}}
+:root[data-theme="dark"]{--bg:#0f1117;--card:#181c27;--card2:#202535;--line:#2a3042;--txt:#eef0f5;--txt2:#aab0c0;--muted:#7a8194;--acc:#4f8ef7;--up:#38d9a9;--down:#f76f6f;--grid:#262b3a;--ig:#e87ba4;--tt:#38d9a9;--yt:#f76f6f}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--txt);font:15px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;-webkit-font-smoothing:antialiased}
+.wrap{max-width:1240px;margin:0 auto;padding:24px 16px 48px}
+header{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-end;gap:16px;margin-bottom:20px}
+h1{font-size:22px;font-weight:600;margin:0}
+.sub{color:var(--muted);font-size:13px;margin:2px 0 0}
+.ctrls{display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end}
+label{display:block;font-size:12px;color:var(--txt2);margin-bottom:4px}
+select{background:var(--card);color:var(--txt);border:1px solid var(--line);border-radius:8px;padding:8px 10px;font:inherit;font-size:14px;min-width:150px}
+.seg{display:flex;background:var(--card);border:1px solid var(--line);border-radius:8px;padding:3px;gap:2px}
+.seg button{background:none;border:0;color:var(--txt2);font:inherit;font-size:13px;padding:6px 12px;border-radius:6px;cursor:pointer;display:flex;align-items:center;gap:6px}
+.seg button.on{background:var(--card2);color:var(--txt)}
+.dot{width:9px;height:9px;border-radius:2px;display:inline-block;flex:none}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;margin-bottom:16px}
+.k{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 16px}
+.k .l{font-size:12.5px;color:var(--txt2)}
+.k .v{font-size:26px;font-weight:600;margin:4px 0 2px;font-variant-numeric:tabular-nums}
+.k .d{font-size:12.5px;color:var(--muted)}
+.up{color:var(--up)!important}.down{color:var(--down)!important}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,460px),1fr));gap:16px;margin-bottom:16px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px;min-width:0}
+.card h2{font-size:15px;font-weight:600;margin:0}
+.card .hint{font-size:12.5px;color:var(--muted);margin:2px 0 10px}
+.legend{display:flex;flex-wrap:wrap;gap:14px;font-size:12.5px;color:var(--txt2);margin-bottom:8px}
+.legend span{display:flex;align-items:center;gap:5px}
+.chart{position:relative;height:250px}
+.tw{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:13.5px;font-variant-numeric:tabular-nums}
+th,td{padding:8px 8px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap}
+th{font-weight:500;color:var(--txt2);font-size:12.5px}
+th:first-child,td:first-child{text-align:left}
+tbody tr:last-child td{border-bottom:0}
+.bar{display:inline-block;height:6px;border-radius:3px;background:var(--acc);vertical-align:middle;margin-left:8px;opacity:.75}
+details summary{cursor:pointer;font-size:15px;font-weight:600;list-style:none;display:flex;justify-content:space-between}
+details summary::after{content:"Mostrar";font-size:12.5px;font-weight:400;color:var(--acc)}
+details[open] summary::after{content:"Ocultar"}
+details[open] summary{margin-bottom:10px}
+.err{background:var(--card);border:1px solid var(--down);border-radius:12px;padding:16px;color:var(--down);display:none}
+footer{color:var(--muted);font-size:12px;margin-top:20px;text-align:center}
+@media (max-width:600px){.k .v{font-size:22px}select{min-width:0;width:100%}.ctrls>div{flex:1 1 100%}.seg{overflow-x:auto}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <div>
+    <h1>KPIs Redes Sociales</h1>
+    <p class="sub" id="sub">Instagram · TikTok · YouTube</p>
+  </div>
+  <div class="ctrls">
+    <div><label for="periodo">Período</label><select id="periodo"></select></div>
+    <div><label>Plataforma</label><div class="seg" id="plats"></div></div>
+  </div>
+</header>
+
+<div class="err" id="err"></div>
+
+<section class="kpis" id="kpis"></section>
+
+<section class="grid2">
+  <div class="card"><h2>Nuevos seguidores por día</h2><p class="hint">Seguidores ganados netos</p><div class="legend" id="lg1"></div><div class="chart"><canvas id="c1" role="img" aria-label="Nuevos seguidores diarios por plataforma"></canvas></div></div>
+  <div class="card"><h2>Engagement rate por día</h2><p class="hint">Interacciones ÷ impresiones</p><div class="legend" id="lg2"></div><div class="chart"><canvas id="c2" role="img" aria-label="Engagement rate diario por plataforma"></canvas></div></div>
+</section>
+
+<section class="grid2">
+  <div class="card"><h2>Impresiones por día</h2><p class="hint">Visualizaciones totales</p><div class="legend" id="lg3"></div><div class="chart"><canvas id="c3" role="img" aria-label="Impresiones diarias por plataforma"></canvas></div></div>
+  <div class="card"><h2>Mix de interacciones</h2><p class="hint">Likes, comentarios, compartidos y guardados</p><div class="legend" id="lg4"></div><div class="chart"><canvas id="c4" role="img" aria-label="Composición de interacciones por plataforma"></canvas></div></div>
+</section>
+
+<section class="grid2">
+  <div class="card"><h2>Comparativo por plataforma</h2><p class="hint">Totales del período</p><div class="tw"><table id="tp"></table></div></div>
+  <div class="card"><h2>Ranking de formatos</h2><p class="hint">Ordenado por engagement rate</p><div class="tw"><table id="tf"></table></div></div>
+</section>
+
+<section class="card">
+  <details><summary>Detalle diario</summary><div class="tw"><table id="td"></table></div></details>
+</section>
+
+<footer id="foot"></footer>
+</div>
+
+<script>
+const PLATS = ["Instagram", "TikTok", "YouTube"];
+const VAR = { Instagram: "--ig", TikTok: "--tt", YouTube: "--yt" };
+const DASH = { Instagram: [], TikTok: [6, 4], YouTube: [2, 3] };
+const MESES = ["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
+const $ = id => document.getElementById(id);
+const css = v => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+const nf = v => Math.round(v).toLocaleString("es-CL");
+const pct = v => (v * 100).toFixed(2).replace(".", ",") + "%";
+const dm = iso => iso.slice(8, 10) + "-" + iso.slice(5, 7);
+const toD = iso => new Date(iso + "T12:00:00");
+const toIso = d => d.toISOString().slice(0, 10);
+const addDays = (iso, n) => { const d = toD(iso); d.setDate(d.getDate() + n); return toIso(d); };
+
+let DATA = [], PERIODOS = [], plat = "all", charts = [];
+
+function isoWeek(iso) {
+  const d = toD(iso), day = (d.getDay() + 6) % 7;
+  d.setDate(d.getDate() - day + 3);
+  const y = d.getFullYear(), w1 = new Date(y, 0, 4);
+  return { y, w: 1 + Math.round(((d - w1) / 864e5 - 3 + ((w1.getDay() + 6) % 7)) / 7), lunes: addDays(iso, -day) };
+}
+
+function construirPeriodos() {
+  const fechas = [...new Set(DATA.map(r => r.date))].sort();
+  const min = fechas[0], max = fechas[fechas.length - 1], p = [];
+  p.push({ id: "all", nombre: "Todo el historial", ini: min, fin: max });
+  p.push({ id: "l7", nombre: "Últimos 7 días", ini: addDays(max, -6), fin: max, prev: [addDays(max, -13), addDays(max, -7)] });
+  p.push({ id: "l30", nombre: "Últimos 30 días", ini: addDays(max, -29), fin: max, prev: [addDays(max, -59), addDays(max, -30)] });
+  const meses = [...new Set(fechas.map(f => f.slice(0, 7)))].reverse();
+  meses.forEach(m => {
+    const [y, mm] = m.split("-").map(Number);
+    const fin = toIso(new Date(y, mm, 0, 12)), pm = new Date(y, mm - 2, 1, 12);
+    p.push({ id: "m" + m, nombre: MESES[mm - 1] + " " + y, ini: m + "-01", fin,
+      prev: [toIso(pm), toIso(new Date(y, mm - 1, 0, 12))] });
+  });
+  const semanas = new Map();
+  fechas.forEach(f => { const s = isoWeek(f); semanas.set(s.lunes, s); });
+  [...semanas.values()].sort((a, b) => b.lunes.localeCompare(a.lunes)).forEach(s => {
+    const fin = addDays(s.lunes, 6);
+    p.push({ id: "w" + s.lunes, nombre: `Semana ${s.w} · ${dm(s.lunes)} al ${dm(fin)}`, ini: s.lunes, fin,
+      prev: [addDays(s.lunes, -7), addDays(s.lunes, -1)] });
+  });
+  PERIODOS = p;
+  const sel = $("periodo");
+  sel.innerHTML = [["", p.slice(0, 3)], ["Meses", p.filter(x => x.id[0] === "m")], ["Semanas", p.filter(x => x.id[0] === "w")]]
+    .map(([g, xs]) => { const o = xs.map(x => `<option value="${x.id}">${x.nombre}</option>`).join(""); return g ? `<optgroup label="${g}">${o}</optgroup>` : o; }).join("");
+  let guardado = null; try { guardado = localStorage.getItem("rrss_periodo"); } catch (e) {}
+  sel.value = PERIODOS.some(x => x.id === guardado) ? guardado : (meses.length ? "m" + meses[0] : "all");
+  sel.onchange = () => { try { localStorage.setItem("rrss_periodo", sel.value); } catch (e) {} render(); };
+}
+
+function sumar(rs) {
+  const s = { n: 0, im: 0, re: 0, it: 0, w: 0, likes: 0, comments: 0, shares: 0, saves: 0, pubs: rs.length };
+  rs.forEach(r => { s.n += r.new_followers; s.im += r.impressions; s.re += r.reach; s.it += r.interactions; s.w += r.watch_time_seconds;
+    s.likes += r.likes; s.comments += r.comments; s.shares += r.shares; s.saves += r.saves; });
+  s.er = s.im ? s.it / s.im : 0;
+  return s;
+}
+
+function seguidoresAl(p, fecha) {
+  const rs = DATA.filter(r => r.platform === p && r.date <= fecha);
+  return rs.length ? rs[rs.length - 1].followers : null;
+}
+
+function delta(act, ant, esPct) {
+  if (ant == null || (!esPct && ant === 0)) return `<span class="d">sin período anterior</span>`;
+  const dif = esPct ? (act - ant) * 100 : (act - ant) / ant * 100;
+  const cls = dif > 0.005 ? "up" : dif < -0.005 ? "down" : "";
+  const flecha = dif > 0.005 ? "▲" : dif < -0.005 ? "▼" : "■";
+  const txt = esPct ? `${dif >= 0 ? "+" : ""}${dif.toFixed(2).replace(".", ",")} pp` : `${dif >= 0 ? "+" : ""}${dif.toFixed(1).replace(".", ",")}%`;
+  return `<span class="d ${cls}">${flecha} ${txt}</span> <span class="d">vs anterior</span>`;
+}
+
+function leyenda(ps) { return ps.map(p => `<span><span class="dot" style="background:${css(VAR[p])}"></span>${p}</span>`).join(""); }
+
+function render() {
+  const per = PERIODOS.find(x => x.id === $("periodo").value);
+  const ps = plat === "all" ? PLATS : [plat];
+  const enP = r => ps.includes(r.platform);
+  const rs = DATA.filter(r => enP(r) && r.date >= per.ini && r.date <= per.fin);
+  const prs = per.prev ? DATA.filter(r => enP(r) && r.date >= per.prev[0] && r.date <= per.prev[1]) : [];
+  const hayPrev = per.prev && prs.length > 0;
+  const a = sumar(rs), b = hayPrev ? sumar(prs) : null;
+  const finReal = rs.length ? rs[rs.length - 1].date : per.fin;
+  const seg = ps.reduce((t, p) => t + (seguidoresAl(p, finReal) || 0), 0);
+  const segIni = ps.reduce((t, p) => t + (seguidoresAl(p, addDays(per.ini, -1)) || 0), 0);
+
+  const k = [
+    ["Seguidores totales", nf(seg), segIni ? `<span class="d ${seg - segIni >= 0 ? "up" : "down"}">${seg - segIni >= 0 ? "▲ +" : "▼ "}${nf(seg - segIni)}</span> <span class="d">en el período</span>` : `<span class="d">al ${dm(finReal)}</span>`],
+    ["Nuevos seguidores", "+" + nf(a.n), delta(a.n, b && b.n)],
+    ["Impresiones / views", nf(a.im), delta(a.im, b && b.im)],
+    ["Alcance único", nf(a.re), delta(a.re, b && b.re)],
+    ["Interacciones", nf(a.it), delta(a.it, b && b.it)],
+    ["Engagement rate", pct(a.er), delta(a.er, b && b.er, true)],
+    ["Tiempo visto", nf(a.w / 3600) + " h", delta(a.w, b && b.w)],
+  ];
+  $("kpis").innerHTML = k.map(x => `<div class="k"><div class="l">${x[0]}</div><div class="v">${x[1]}</div><div>${x[2]}</div></div>`).join("");
+
+  const fechas = [...new Set(rs.map(r => r.date))].sort();
+  const porDia = (p, f) => sumar(rs.filter(r => r.platform === p && r.date === f));
+  const lg = leyenda(ps);
+  ["lg1", "lg2", "lg3"].forEach(id => $(id).innerHTML = lg);
+
+  charts.forEach(c => c.destroy());
+  const grid = css("--grid"), tick = css("--muted");
+  Chart.defaults.font.family = getComputedStyle(document.body).fontFamily;
+  const sc = { x: { grid: { display: false }, ticks: { color: tick, maxRotation: 0, autoSkipPadding: 12 } },
+               y: { grid: { color: grid }, border: { display: false }, ticks: { color: tick, callback: v => nf(v) }, beginAtZero: true } };
+  const base = { responsive: true, maintainAspectRatio: false, interaction: { mode: "index", intersect: false }, plugins: { legend: { display: false } } };
+  const labels = fechas.map(dm);
+  const linea = campo => ps.map(p => ({ label: p, data: fechas.map(f => { const x = rs.filter(r => r.platform === p && r.date === f); return x.length ? sumar(x)[campo] : null; }),
+    borderColor: css(VAR[p]), backgroundColor: css(VAR[p]), borderWidth: 2, borderDash: DASH[p], pointRadius: fechas.length > 31 ? 0 : 3, tension: .3, spanGaps: true }));
+
+  charts = [
+    new Chart($("c1"), { type: "line", data: { labels, datasets: linea("n") }, options: { ...base, scales: sc } }),
+    new Chart($("c2"), { type: "bar", data: { labels, datasets: ps.map(p => ({ label: p,
+        data: fechas.map(f => { const x = rs.filter(r => r.platform === p && r.date === f); return x.length ? +(sumar(x).er * 100).toFixed(2) : null; }),
+        backgroundColor: css(VAR[p]), borderRadius: 4, maxBarThickness: 18 })) },
+      options: { ...base, plugins: { ...base.plugins, tooltip: { callbacks: { label: c => `${c.dataset.label}: ${c.raw.toFixed(2).replace(".", ",")}%` } } },
+        scales: { ...sc, y: { ...sc.y, ticks: { color: tick, callback: v => v + "%" } } } } }),
+    new Chart($("c3"), { type: "line", data: { labels, datasets: linea("im") }, options: { ...base, scales: sc } }),
+  ];
+
+  const tipos = [["likes", "Likes", "--acc"], ["comments", "Comentarios", "--tt"], ["shares", "Compartidos", "--ig"], ["saves", "Guardados", "--muted"]];
+  $("lg4").innerHTML = tipos.map(t => `<span><span class="dot" style="background:${css(t[2])}"></span>${t[1]}</span>`).join("");
+  const sp = ps.map(p => sumar(rs.filter(r => r.platform === p)));
+  charts.push(new Chart($("c4"), { type: "bar", data: { labels: ps, datasets: tipos.map(t => ({ label: t[1],
+      data: sp.map(s => s.it ? +(s[t[0]] / s.it * 100).toFixed(1) : 0), backgroundColor: css(t[2]), borderColor: css("--card"), borderWidth: { left: 2, right: 0, top: 0, bottom: 0 }, maxBarThickness: 26 })) },
+    options: { ...base, indexAxis: "y", interaction: { mode: "index", intersect: false },
+      plugins: { ...base.plugins, tooltip: { callbacks: { label: c => `${c.dataset.label}: ${c.raw.toFixed(1).replace(".", ",")}%` } } },
+      scales: { x: { stacked: true, max: 100, grid: { color: grid }, border: { display: false }, ticks: { color: tick, callback: v => v + "%" } }, y: { stacked: true, grid: { display: false }, ticks: { color: tick } } } } }));
+
+  $("tp").innerHTML = `<thead><tr><th>Plataforma</th><th>Seguidores</th><th>Nuevos</th><th>Impresiones</th><th>Interacciones</th><th>ER</th></tr></thead><tbody>` +
+    ps.map((p, i) => { const s = sp[i]; return `<tr><td><span class="dot" style="background:${css(VAR[p])}"></span> ${p}</td><td>${nf(seguidoresAl(p, finReal) || 0)}</td><td>+${nf(s.n)}</td><td>${nf(s.im)}</td><td>${nf(s.it)}</td><td>${pct(s.er)}</td></tr>`; }).join("") + "</tbody>";
+
+  const fm = new Map();
+  rs.forEach(r => { const key = r.platform + "|" + r.content_type; if (!fm.has(key)) fm.set(key, []); fm.get(key).push(r); });
+  const fl = [...fm.entries()].map(([key, v]) => ({ p: key.split("|")[0], f: key.split("|")[1], s: sumar(v) })).sort((x, y) => y.s.er - x.s.er);
+  const maxEr = Math.max(...fl.map(x => x.s.er), 0.0001);
+  $("tf").innerHTML = `<thead><tr><th>Formato</th><th>Publ.</th><th>Impr. prom.</th><th>ER</th></tr></thead><tbody>` +
+    fl.map(x => `<tr><td><span class="dot" style="background:${css(VAR[x.p])}"></span> ${x.f}${ps.length > 1 ? ` <span style="color:var(--muted)">· ${x.p}</span>` : ""}</td><td>${x.s.pubs}</td><td>${nf(x.s.im / x.s.pubs)}</td><td>${pct(x.s.er)}<span class="bar" style="width:${Math.round(x.s.er / maxEr * 50)}px"></span></td></tr>`).join("") + "</tbody>";
+
+  $("td").innerHTML = `<thead><tr><th>Fecha</th><th>Plataforma</th><th>Formato</th><th>Seguidores</th><th>Nuevos</th><th>Impresiones</th><th>Alcance</th><th>Likes</th><th>Coment.</th><th>Compart.</th><th>Guard.</th><th>Interacc.</th><th>ER</th></tr></thead><tbody>` +
+    [...rs].reverse().map(r => `<tr><td>${dm(r.date)}-${r.date.slice(0, 4)}</td><td><span class="dot" style="background:${css(VAR[r.platform])}"></span> ${r.platform}</td><td>${r.content_type}</td><td>${nf(r.followers)}</td><td>+${nf(r.new_followers)}</td><td>${nf(r.impressions)}</td><td>${nf(r.reach)}</td><td>${nf(r.likes)}</td><td>${nf(r.comments)}</td><td>${nf(r.shares)}</td><td>${nf(r.saves)}</td><td>${nf(r.interactions)}</td><td>${pct(r.impressions ? r.interactions / r.impressions : 0)}</td></tr>`).join("") + "</tbody>";
+
+  $("sub").textContent = `${ps.join(" · ")} —${dm(per.ini)}-${per.ini.slice(0, 4)} al ${dm(per.fin)}-${per.fin.slice(0, 4)}` + (hayPrev ? ` · comparado con ${dm(per.prev[0])} al ${dm(per.prev[1])}` : "");
+}
+
+function botonesPlataforma() {
+  $("plats").innerHTML = ["all", ...PLATS].map(p => `<button data-p="${p}" class="${p === plat ? "on" : ""}">${p === "all" ? "Todas" : `<span class="dot" style="background:${css(VAR[p])}"></span>${p}`}</button>`).join("");
+  $("plats").querySelectorAll("button").forEach(b => b.onclick = () => { plat = b.dataset.p; botonesPlataforma(); render(); });
+}
+
+fetch("data.json?v=" + Date.now()).then(r => { if (!r.ok) throw new Error("HTTP " + r.status); return r.json(); }).then(j => {
+  DATA = (j.registros || []).filter(r => PLATS.includes(r.platform));
+  if (!DATA.length) throw new Error("data.json no tiene registros");
+  $("foot").textContent = `Datos actualizados: ${j.generado} · fuente: ${j.fuente}`;
+  construirPeriodos(); botonesPlataforma(); render();
+  matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => { botonesPlataforma(); render(); });
+}).catch(e => { $("err").style.display = "block"; $("err").textContent = "No se pudieron cargar los datos (" + e.message + "). Si abriste el archivo con doble clic, usa el link publicado o un servidor local."; });
+</script>
+</body>
+</html>
